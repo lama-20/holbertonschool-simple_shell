@@ -3,12 +3,6 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-/**
- * is_empty - checks if input is only spaces/tabs/newlines
- * @str: input string
- *
- * Return: 1 if empty, 0 otherwise
- */
 int is_empty(char *str)
 {
         int i = 0;
@@ -25,18 +19,13 @@ int is_empty(char *str)
         return (1);
 }
 
-/**
- * main - simple shell
- *
- * Return: Always 0
- */
 int main(void)
 {
         char *line = NULL;
         size_t len = 0;
         ssize_t read;
         pid_t pid;
-        char *args[] = {NULL, NULL};
+        extern char **environ;
 
         while (1)
         {
@@ -60,13 +49,13 @@ int main(void)
                 if (is_empty(line))
                         continue;
 
-                args[0] = line;
-
                 pid = fork();
 
                 if (pid == 0)
                 {
-                        if (execve(args[0], args, NULL) == -1)
+                        char *args[] = {line, NULL};
+
+                        if (execve(args[0], args, environ) == -1)
                         {
                                 perror("./hsh");
                                 exit(1);
