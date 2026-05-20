@@ -34,26 +34,30 @@ void trim_newline(char *str)
 	}
 }
 
-char *trim_spaces(char *str)
+char **split_line(char *line)
 {
-	int end;
+	int i = 0;
+	char **tokens = malloc(sizeof(char *) * 64);
+	char *token;
 
-	while (*str == ' ' || *str == '\t')
-		str++;
+	if (!tokens)
+		return (NULL);
 
-	end = strlen(str) - 1;
-	while (end > 0 && (str[end] == ' ' || str[end] == '\t'))
+	token = strtok(line, " \t");
+	while (token != NULL)
 	{
-		str[end] = '\0';
-		end--;
+		tokens[i] = token;
+		i++;
+		token = strtok(NULL, " \t");
 	}
-	return (str);
+	tokens[i] = NULL;
+	return (tokens);
 }
 
 int main(void)
 {
 	char *line = NULL;
-	char *cmd;
+	char **argv;
 	size_t len = 0;
 	ssize_t nread;
 	pid_t pid;
@@ -78,18 +82,17 @@ int main(void)
 		if (is_empty(line))
 			continue;
 
-		cmd = trim_spaces(line);
+		argv = split_line(line);
+		if (!argv)
+			continue;
 
 		pid = fork();
 		if (pid == 0)
 		{
-			char *argv[2];
-
-			argv[0] = cmd;
-			argv[1] = NULL;
-			if (execve(cmd, argv, environ) == -1)
+			if (execve(argv[0], argv, environ) == -1)
 			{
 				perror("./hsh");
+				free(argv);
 				exit(1);
 			}
 		}
@@ -97,6 +100,7 @@ int main(void)
 		{
 			wait(NULL);
 		}
+		free(argv);
 	}
 
 	free(line);
