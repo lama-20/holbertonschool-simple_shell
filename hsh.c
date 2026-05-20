@@ -6,14 +6,11 @@
 extern char **environ;
 
 /**
- * is_empty - check if input is only spaces
+ * is_empty - checks if string is only spaces
  */
 int is_empty(char *str)
 {
         int i = 0;
-
-        if (!str)
-                return (1);
 
         while (str[i])
         {
@@ -22,6 +19,24 @@ int is_empty(char *str)
                 i++;
         }
         return (1);
+}
+
+/**
+ * trim_newline - remove \n
+ */
+void trim_newline(char *str)
+{
+        int i = 0;
+
+        while (str[i])
+        {
+                if (str[i] == '\n')
+                {
+                        str[i] = '\0';
+                        return;
+                }
+                i++;
+        }
 }
 
 /**
@@ -50,8 +65,7 @@ int main(void)
                         exit(0);
                 }
 
-                if (read > 0 && line[read - 1] == '\n')
-                        line[read - 1] = '\0';
+                trim_newline(line);
 
                 if (is_empty(line))
                         continue;
