@@ -1,4 +1,14 @@
-# This file lists all individuals having contributed content to the repository
+.TH hsh 1 "May 2026" "1.0" "Simple Shell Manual"
 
-Ali Sayah<>
-Lama Alzahrani<lama72316@gmail.com>
+.SH NAME
+hsh \- simple UNIX command interpreter
+
+.SH SYNOPSIS
+.B hsh
+
+.SH DESCRIPTION
+Simple shell project for Holberton School.
+
+.SH AUTHOR
+Lama
+Ali
