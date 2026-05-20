@@ -3,6 +3,11 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
+extern char **environ;
+
+/**
+ * is_empty - check if input is only spaces
+ */
 int is_empty(char *str)
 {
         int i = 0;
@@ -19,13 +24,15 @@ int is_empty(char *str)
         return (1);
 }
 
+/**
+ * main - simple shell
+ */
 int main(void)
 {
         char *line = NULL;
         size_t len = 0;
         ssize_t read;
         pid_t pid;
-        extern char **environ;
 
         while (1)
         {
@@ -53,9 +60,12 @@ int main(void)
 
                 if (pid == 0)
                 {
-                        char *args[] = {line, NULL};
+                        char *argv[2];
 
-                        if (execve(args[0], args, environ) == -1)
+                        argv[0] = line;
+                        argv[1] = NULL;
+
+                        if (execve(argv[0], argv, environ) == -1)
                         {
                                 perror("./hsh");
                                 exit(1);
