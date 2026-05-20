@@ -18,8 +18,11 @@ int main(void)
 
 	while (1)
 	{
-		printf("#cisfun$ ");
-		fflush(stdout);
+		if (isatty(STDIN_FILENO))
+{
+	printf("#cisfun$ ");
+	fflush(stdout);
+}
 
 		read = getline(&line, &len, stdin);
 
