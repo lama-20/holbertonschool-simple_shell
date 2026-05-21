@@ -47,24 +47,24 @@ char *_which(char *command)
 	p_copy = strdup(path);
 	if (!p_copy)
 		return (NULL);
-	f_path = malloc(1024);
-	if (!f_path)
-	{
-		free(p_copy);
-		return (NULL);
-	}
 	token = strtok(p_copy, ":");
 	while (token)
 	{
+		f_path = malloc(strlen(token) + strlen(command) + 2);
+		if (!f_path)
+		{
+			free(p_copy);
+			return (NULL);
+		}
 		sprintf(f_path, "%s/%s", token, command);
 		if (stat(f_path, &st) == 0)
 		{
 			free(p_copy);
 			return (f_path);
 		}
+		free(f_path);
 		token = strtok(NULL, ":");
 	}
 	free(p_copy);
-	free(f_path);
 	return (NULL);
 }
