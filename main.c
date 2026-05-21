@@ -1,75 +1,86 @@
 #include "shell.h"
 
 /**
- * exec_child - Forks and executes a command
- * @full_cmd: Full path of the command
- * @argv: Arguments array
- * @line: Input line buffer to free on failure
- */
-void exec_child(char *full_cmd, char **argv, char *line)
-{
-	pid_t pid;
-
-	pid = fork();
-	if (pid == 0)
-	{
-		if (execve(full_cmd, argv, environ) == -1)
-		{
-			free(full_cmd);
-			free(line);
-			exit(EXIT_FAILURE);
-		}
-	}
-	else
-	{
-		wait(NULL);
-	}
-}
-
-/**
  * main - Entry point for the simple shell
  * @ac: Argument count
  * @av: Argument vector
- * Return: Always 0
+ *
+ * Return: 0 on success, or last exit status
  */
 int main(int ac, char **av)
 {
 	char *line = NULL, *argv[64], *token, *full_cmd;
 	size_t len = 0;
-	int i, loop_count = 0;
+	ssize_t nread;
+	int i, status = 0, line_count = 0;
+	pid_t pid;
 	(void)ac;
 
 	while (1)
 	{
-		loop_count++;
+		line_count++;
 		if (isatty(STDIN_FILENO))
 			write(STDOUT_FILENO, "($) ", 4);
-		if (getline(&line, &len, stdin) == -1)
+
+		nread = getline(&line, &len, stdin);
+		if (nread == -1)
 			break;
+
+		if (nread > 0 && line[nread - 1] == '\n')
+			line[nread - 1] = '\0';
+
 		i = 0;
-		token = strtok(line, " \t\n");
+		token = strtok(line, " \t");
 		while (token && i < 63)
 		{
 			argv[i++] = token;
-			token = strtok(NULL, " \t\n");
+			token = strtok(NULL, " \t");
 		}
 		argv[i] = NULL;
+
 		if (argv[0] == NULL)
 			continue;
+
 		if (strcmp(argv[0], "exit") == 0)
 		{
 			free(line);
-			exit(EXIT_SUCCESS);
+			exit(status);
 		}
+
 		full_cmd = _which(argv[0]);
-		if (full_cmd == NULL)
+		if (!full_cmd)
 		{
-			fprintf(stderr, "%s: %d: %s: not found\n", av[0], loop_count, argv[0]);
+			fprintf(stderr, "%s: %d: %s: not found\n", av[0], line_count, argv[0]);
+			status = 127;
 			continue;
 		}
-		exec_child(full_cmd, argv, line);
+
+		pid = fork();
+		if (pid == -1)
+		{
+			perror("fork");
+			free(full_cmd);
+			free(line);
+			exit(EXIT_FAILURE);
+		}
+		if (pid == 0)
+		{
+			if (execve(full_cmd, argv, environ) == -1)
+			{
+				perror(av[0]);
+				free(full_cmd);
+				free(line);
+				exit(EXIT_FAILURE);
+			}
+		}
+		else
+		{
+			wait(&status);
+			if (WIFEXITED(status))
+				status = WEXITSTATUS(status);
+		}
 		free(full_cmd);
 	}
 	free(line);
-	return (0);
+	return (status);
 }
