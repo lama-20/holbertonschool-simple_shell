@@ -24,7 +24,6 @@ void exec_child(char *full_cmd, char **argv, char *line)
 	else
 	{
 		wait(NULL);
-		free(full_cmd);
 	}
 }
 
@@ -41,12 +40,12 @@ int main(void)
 	while (1)
 	{
 		if (isatty(STDIN_FILENO))
-			write(STDOUT_FILENO, "#cisfun$ ", 9);
+			write(STDOUT_FILENO, "($) ", 4);
 		if (getline(&line, &len, stdin) == -1)
 			break;
 		i = 0;
 		token = strtok(line, " \t\n");
-		while (token)
+		while (token && i < 63)
 		{
 			argv[i++] = token;
 			token = strtok(NULL, " \t\n");
@@ -61,6 +60,7 @@ int main(void)
 			continue;
 		}
 		exec_child(full_cmd, argv, line);
+		free(full_cmd);
 	}
 	free(line);
 	return (0);

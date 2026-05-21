@@ -3,13 +3,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 
 extern char **environ;
 
+char *_getenv(char *name);
 char *_which(char *command);
 
-#endif
+#endif /* SHELL_H */
