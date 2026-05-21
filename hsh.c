@@ -6,103 +6,39 @@
 
 extern char **environ;
 
-int is_empty(char *str)
-{
-	int i = 0;
-
-	while (str[i])
-	{
-		if (str[i] != ' ' && str[i] != '\t' && str[i] != '\n')
-			return (0);
-		i++;
-	}
-	return (1);
-}
-
-void trim_newline(char *str)
-{
-	int i = 0;
-
-	while (str[i])
-	{
-		if (str[i] == '\n')
-		{
-			str[i] = '\0';
-			return;
-		}
-		i++;
-	}
-}
-
-char **split_line(char *line)
-{
-	int i = 0;
-	char **tokens = malloc(sizeof(char *) * 64);
-	char *token;
-
-	if (!tokens)
-		return (NULL);
-
-	token = strtok(line, " \t");
-	while (token != NULL)
-	{
-		tokens[i] = token;
-		i++;
-		token = strtok(NULL, " \t");
-	}
-	tokens[i] = NULL;
-	return (tokens);
-}
-
 int main(void)
 {
-	char *line = NULL;
-	char **argv;
+	char *line = NULL, *argv[64], *token;
 	size_t len = 0;
-	ssize_t nread;
+	int i;
 	pid_t pid;
 
 	while (1)
 	{
 		if (isatty(STDIN_FILENO))
+			write(STDOUT_FILENO, "#cisfun$ ", 9);
+		if (getline(&line, &len, stdin) == -1)
+			break;
+		i = 0;
+		token = strtok(line, " \t\n");
+		while (token != NULL)
 		{
-			printf("#cisfun$ ");
-			fflush(stdout);
+			argv[i++] = token;
+			token = strtok(NULL, " \t\n");
 		}
-
-		nread = getline(&line, &len, stdin);
-		if (nread == -1)
-		{
-			free(line);
-			exit(0);
-		}
-
-		trim_newline(line);
-
-		if (is_empty(line))
+		argv[i] = NULL;
+		if (argv[0] == NULL)
 			continue;
-
-		argv = split_line(line);
-		if (!argv)
-			continue;
-
 		pid = fork();
 		if (pid == 0)
 		{
 			if (execve(argv[0], argv, environ) == -1)
-			{
 				perror("./hsh");
-				free(argv);
-				exit(1);
-			}
+			exit(EXIT_FAILURE);
 		}
 		else
-		{
 			wait(NULL);
-		}
-		free(argv);
 	}
-
 	free(line);
 	return (0);
 }
