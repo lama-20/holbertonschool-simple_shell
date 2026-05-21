@@ -1,29 +1,37 @@
 #include "shell.h"
 
+/**
+ * _which - finds the full path of a command
+ * @command: command to find
+ * Return: pointer to the full path, or NULL if not found
+ */
 char *_which(char *command)
 {
-    char *path = getenv("PATH"), *path_copy, *token, *full_path;
-    struct stat st;
+	char *path = getenv("PATH"), *p_copy, *token, *f_path;
+	struct stat st;
 
-    if (command[0] == '/' || command[0] == '.')
-    {
-        if (stat(command, &st) == 0) return (strdup(command));
-        return (NULL);
-    }
-    path_copy = strdup(path);
-    token = strtok(path_copy, ":");
-    full_path = malloc(1024);
-    while (token)
-    {
-        sprintf(full_path, "%s/%s", token, command);
-        if (stat(full_path, &st) == 0)
-        {
-            free(path_copy);
-            return (full_path);
-        }
-        token = strtok(NULL, ":");
-    }
-    free(path_copy);
-    free(full_path);
-    return (NULL);
+	if (command[0] == '/' || command[0] == '.')
+	{
+		if (stat(command, &st) == 0)
+			return (strdup(command));
+		return (NULL);
+	}
+	if (!path)
+		return (NULL);
+	p_copy = strdup(path);
+	token = strtok(p_copy, ":");
+	f_path = malloc(1024);
+	while (token)
+	{
+		sprintf(f_path, "%s/%s", token, command);
+		if (stat(f_path, &st) == 0)
+		{
+			free(p_copy);
+			return (f_path);
+		}
+		token = strtok(NULL, ":");
+	}
+	free(p_copy);
+	free(f_path);
+	return (NULL);
 }
