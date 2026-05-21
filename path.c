@@ -3,7 +3,8 @@
 /**
  * _getenv - Gets the value of an environment variable
  * @name: Name of the variable to find
- * Return: Pointer to the value, or NULL if not found
+ *
+ * Return: Pointer to the value string, or NULL if not found
  */
 char *_getenv(char *name)
 {
@@ -11,11 +12,13 @@ char *_getenv(char *name)
 
 	if (!name || !environ)
 		return (NULL);
+
 	while (environ[i])
 	{
 		j = 0;
 		while (name[j] && environ[i][j] == name[j])
 			j++;
+
 		if (name[j] == '\0' && environ[i][j] == '=')
 			return (environ[i] + j + 1);
 		i++;
@@ -26,6 +29,7 @@ char *_getenv(char *name)
 /**
  * _which - Finds the full path of a command
  * @command: Command to find
+ *
  * Return: Pointer to the full path, or NULL if not found
  */
 char *_which(char *command)
@@ -35,27 +39,23 @@ char *_which(char *command)
 
 	if (!command)
 		return (NULL);
+
 	if (command[0] == '/' || command[0] == '.')
 	{
 		if (stat(command, &st) == 0)
 			return (strdup(command));
 		return (NULL);
 	}
+
 	path = _getenv("PATH");
 	if (!path || *path == '\0')
 		return (NULL);
+
 	p_copy = strdup(path);
-	if (!p_copy)
-		return (NULL);
 	token = strtok(p_copy, ":");
 	while (token)
 	{
-		f_path = malloc(strlen(token) + strlen(command) + 2);
-		if (!f_path)
-		{
-			free(p_copy);
-			return (NULL);
-		}
+		f_path = malloc(1024);
 		sprintf(f_path, "%s/%s", token, command);
 		if (stat(f_path, &st) == 0)
 		{
