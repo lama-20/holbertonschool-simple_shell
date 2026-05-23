@@ -102,7 +102,3 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ($) exit
 ```
 
-## Error Handling
-
-If a command is not found, the shell prints an error in the following format:
-./hsh: 1: ls: not found
