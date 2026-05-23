@@ -1,14 +1,306 @@
-.TH hsh 1 "May 2026" "1.0" "Simple Shell Manual"
+.TH HSH 1 "May 2026" "Version 1.0" "Simple Shell Manual"
 
 .SH NAME
-hsh \- simple UNIX command interpreter
+hsh \- a simple UNIX command line interpreter
 
 .SH SYNOPSIS
 .B hsh
+.br
+.B echo "command" | ./hsh
 
 .SH DESCRIPTION
-Simple shell project for Holberton School.
+.B hsh
+is a simple UNIX command line interpreter written in C.
+It reads commands from standard input, resolves them using the
+.B PATH
+environment variable, and executes them using the
+.BR execve (2)
+system call.
 
-.SH AUTHOR
-Lama
-Ali
+The shell operates in two modes:
+
+.TP
+.B Interactive Mode
+The shell displays the prompt
+.B ($)
+and waits for the user to type a command. After each command is executed, the prompt is displayed again.
+
+.TP
+.B Non-Interactive Mode
+Commands are read from a pipe or redirected file. No prompt is displayed. The shell reads, executes, and exits.
+
+.SH OPTIONS
+.B hsh
+takes no options. It reads from standard input only.
+
+.SH USAGE
+
+.TP
+.B Interactive mode:
+.nf
+$ ./hsh
+($) /bin/ls
+($) ls -l /tmp
+($) exit
+.fi
+
+.TP
+.B Non-interactive mode:
+.nf
+$ echo "/bin/ls" | ./hsh
+$ cat commands.txt | ./hsh
+.fi
+
+.SH BUILT-IN COMMANDS
+
+.TP
+.B exit
+Exit the shell immediately. The exit status will be the exit status of the last command that was executed before calling exit. No arguments are handled.
+
+.TP
+.B env
+Print all the current environment variables to standard output, one variable per line. Each line is in the format NAME=VALUE.
+
+.SH COMMAND EXECUTION
+When the user enters a command, the shell follows these steps:
+
+.IP 1. 4
+Read the input line using
+.BR getline (3).
+
+.IP 2. 4
+Parse the line into tokens (command name and arguments) using
+.BR strtok (3),
+splitting on spaces and tabs.
+
+.IP 3. 4
+Check if the first token matches a built-in command
+.RB ( exit " or " env ).
+If it does, execute the built-in and go back to step 1.
+
+.IP 4. 4
+If the command contains a
+.B /
+character, treat it as an absolute or relative path and check if it is executable using
+.BR stat (2).
+
+.IP 5. 4
+Otherwise, search for the command in each directory listed in the
+.B PATH
+environment variable using the internal
+.B _which
+function.
+
+.IP 6. 4
+If the command is
+.B not found,
+print an error message to stderr and do
+.B not
+call
+.BR fork (2).
+The exit status is set to 127.
+
+.IP 7. 4
+If the command
+.B is found,
+call
+.BR fork (2)
+to create a child process, then call
+.BR execve (2)
+in the child to execute the command, passing the full argument list and the current environment.
+
+.IP 8. 4
+The parent process calls
+.BR wait (2)
+to wait for the child to finish, then collects its exit status.
+
+.IP 9. 4
+The shell displays the prompt again and repeats.
+
+.SH PATH RESOLUTION
+The shell uses the
+.B PATH
+environment variable to find commands. The
+.B _which
+function splits the PATH by
+.B :
+and checks each directory by appending
+.B /commandname
+to it. If the resulting full path is an executable file (checked with
+.BR stat (2)),
+that full path is returned and used for execution.
+
+If
+.B PATH
+is not set or the command is not found in any directory, the shell prints an error and skips execution.
+
+.SH ERROR MESSAGES
+When a command is not found, the shell prints the following message to stderr:
+
+.nf
+./hsh: <line_number>: <command>: not found
+.fi
+
+.TP
+.B Example:
+.nf
+$ ./hsh
+($) invalidcmd
+./hsh: 1: invalidcmd: not found
+($) ls
+./hsh: 2: ls: not found
+.fi
+
+.PP
+If
+.BR fork (2)
+fails, the shell prints the error using
+.BR perror (3)
+and returns exit status 1.
+
+If
+.BR execve (2)
+fails inside the child process, the shell prints the error using
+.BR perror (3)
+and exits with
+.BR EXIT_FAILURE .
+
+.SH EXIT STATUS
+
+.TP
+.B 0
+The command was executed successfully and returned exit status 0.
+
+.TP
+.B 1
+A system call such as fork or execve failed.
+
+.TP
+.B 127
+The command was not found in PATH or as an executable file.
+
+.TP
+.B Any other value
+The exit status of the last command that was executed.
+
+.SH ENVIRONMENT
+.B hsh
+inherits the full environment from its parent process.
+The environment is passed directly to
+.BR execve (2)
+using the global
+.B environ
+variable.
+
+The following environment variables affect the behavior of the shell:
+
+.TP
+.B PATH
+A colon-separated list of directories in which the shell searches for commands. Example:
+.nf
+PATH=/usr/local/bin:/usr/bin:/bin
+.fi
+
+.TP
+.B HOME
+The home directory of the current user.
+
+.TP
+.B USER
+The name of the current user.
+
+.SH FILES
+
+.TP
+.B main.c
+Contains the main shell loop, input reading with getline, argument parsing with strtok, built-in command handling (exit and env), and the execute_cmd function that forks and runs commands with execve.
+
+.TP
+.B path.c
+Contains the
+.B _which
+function that resolves a command name to its full executable path by searching through each directory in the PATH environment variable.
+
+.TP
+.B shell.h
+The header file that includes all standard library headers used by the project and declares all function prototypes shared between source files.
+
+.TP
+.B AUTHORS
+Lists all individuals who have contributed to this project.
+
+.SH EXAMPLES
+
+.TP
+.B Execute an absolute path:
+.nf
+($) /bin/ls
+hsh main.c path.c shell.h
+.fi
+
+.TP
+.B Execute a command found in PATH:
+.nf
+($) ls -l /tmp
+total 0
+.fi
+
+.TP
+.B Print environment variables:
+.nf
+($) env
+USER=lama
+HOME=/home/lama
+PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/bin
+.fi
+
+.TP
+.B Handle a command not found:
+.nf
+($) notacommand
+./hsh: 1: notacommand: not found
+.fi
+
+.TP
+.B Non-interactive usage:
+.nf
+$ echo "/bin/ls" | ./hsh
+hsh main.c path.c shell.h
+.fi
+
+.TP
+.B Exit the shell:
+.nf
+($) exit
+$
+.fi
+
+.SH COMPILATION
+To compile the shell:
+.nf
+gcc -Wall -Werror -Wextra -pedantic -std=gnu89 *.c -o hsh
+.fi
+
+.SH TO VIEW THIS MANUAL
+.nf
+man ./man_1_simple_shell
+.fi
+
+.SH SEE ALSO
+.BR sh (1),
+.BR bash (1),
+.BR dash (1),
+.BR execve (2),
+.BR fork (2),
+.BR wait (2),
+.BR stat (2),
+.BR getline (3),
+.BR strtok (3),
+.BR perror (3),
+.BR environ (7)
+
+
+.SH AUTHORS
+Ali Sayah <ally185512@gmail.com>
+.br
+Lama Alzahrani <lama72316@gmail.com>
