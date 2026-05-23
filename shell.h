@@ -15,5 +15,6 @@ char *_getenv(char *name);
 char *_which(char *command);
 void parse_line(char *line, char **argv);
 int execute_cmd(char *full_cmd, char **argv, char **env);
+void print_env(void);
 
 #endif

@@ -55,6 +55,21 @@ int execute_cmd(char *full_cmd, char **argv, char **env)
 }
 
 /**
+ * print_env - Prints all current environment variables
+ */
+void print_env(void)
+{
+	int i = 0;
+
+	while (environ[i])
+	{
+		write(STDOUT_FILENO, environ[i], strlen(environ[i]));
+		write(STDOUT_FILENO, "\n", 1);
+		i++;
+	}
+}
+
+/**
  * main - Entry point for the simple shell
  * @ac: Argument count
  * @av: Argument vector
@@ -81,11 +96,19 @@ int main(int ac, char **av)
 		parse_line(line, argv);
 		if (argv[0] == NULL)
 			continue;
+
 		if (strcmp(argv[0], "exit") == 0)
 		{
 			free(line);
 			exit(status);
 		}
+		if (strcmp(argv[0], "env") == 0)
+		{
+			print_env();
+			status = 0;
+			continue;
+		}
+
 		full_cmd = _which(argv[0]);
 		if (!full_cmd)
 		{
